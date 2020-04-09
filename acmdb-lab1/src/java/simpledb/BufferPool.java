@@ -1,7 +1,12 @@
 package simpledb;
 
+import javafx.util.Pair;
+
 import java.io.*;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -26,13 +31,16 @@ public class BufferPool {
     constructor instead. */
     public static final int DEFAULT_PAGES = 50;
 
+    private int numPages;
+    private List<Page> pages = new ArrayList<>();
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *
      * @param numPages maximum number of pages in this buffer pool.
      */
     public BufferPool(int numPages) {
-        // some code goes here
+        this.numPages = numPages;
+        pages = Arrays.asList(new Page[numPages]);
     }
     
     public static int getPageSize() {
@@ -64,10 +72,28 @@ public class BufferPool {
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
      */
-    public  Page getPage(TransactionId tid, PageId pid, Permissions perm)
+    public Page getPage(TransactionId tid, PageId pid, Permissions perm)
         throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+        int lastBlank = numPages;
+        for (int i = 0; i < numPages; ++i) {
+            Page page = pages.get(i);
+            if (page != null) {
+                if (page.getId().equals(pid)) {
+                    return page;
+                }
+            }
+            else {
+                lastBlank = i;
+            }
+        }
+        if (lastBlank == numPages) {
+            throw new DbException("Buffer pool overflow.");
+        }
+        else {
+            Page page = Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid);
+            pages.set(lastBlank, page);
+            return page;
+        }
     }
 
     /**
