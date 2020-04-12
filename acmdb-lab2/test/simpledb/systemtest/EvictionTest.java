@@ -40,7 +40,7 @@ public class EvictionTest extends SimpleDbTestBase {
         }
     }
 
-   public static void insertRow(HeapFile f, Transaction t) throws DbException,
+   /*public static void insertRow(HeapFile f, Transaction t) throws DbException,
            TransactionAbortedException {
        // Create a row to insert
        TupleDesc twoIntColumns = Utility.getTupleDesc(2);
@@ -57,7 +57,7 @@ public class EvictionTest extends SimpleDbTestBase {
        assertEquals(1, ((IntField)result.getField(0)).getValue());
        assertFalse(insert.hasNext());
        insert.close();
-   }
+   }*/
 
    public static boolean findMagicTuple(HeapFile f, Transaction t)
            throws DbException, TransactionAbortedException {

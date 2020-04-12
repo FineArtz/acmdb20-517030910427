@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7fbb29e3-c6b1-4e7f-9c5a-7680c9f24e65" name="Default Changelist" comment="" />
+    <list default="true" id="7fbb29e3-c6b1-4e7f-9c5a-7680c9f24e65" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../acmdb-lab2/.idea/libraries/lib.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../acmdb-lab2/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../acmdb-lab2/.idea/workspace.xml" afterDir="false" />
+    </list>
     <ignored path="$PROJECT_DIR$/bin/src/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -129,8 +132,8 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
       <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -259,6 +262,7 @@
       <workItem from="1586338056451" duration="1652000" />
       <workItem from="1586390393544" duration="14232000" />
       <workItem from="1586478760430" duration="1340000" />
+      <workItem from="1586481811266" duration="23000" />
     </task>
     <servers />
   </component>
@@ -295,12 +299,12 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="37371000" />
+    <option name="totallyTimeSpent" value="37394000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="878" extended-state="6" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24329759" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24664879" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />
