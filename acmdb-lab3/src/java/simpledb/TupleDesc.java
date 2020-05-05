@@ -48,6 +48,9 @@ public class TupleDesc implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private Integer size = 0;
+    private int hashcode = -1;
+    private int typeHashcode = -1;
+    private String tostring = null;
 
     /**
      * Create a new TupleDesc with typeAr.length fields with fields of the
@@ -191,11 +194,14 @@ public class TupleDesc implements Serializable {
      * @return true if the object is equal to this TupleDesc.
      */
     public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
         if (!(o instanceof TupleDesc)) {
             return false;
         }
         TupleDesc td = (TupleDesc) o;
-        if (ItemList.size() != td.numFields()) {
+        /*if (ItemList.size() != td.numFields()) {
             return false;
         }
         int len = ItemList.size();
@@ -204,13 +210,29 @@ public class TupleDesc implements Serializable {
                 return false;
             }
         }
-        return true;
+        return true;*/
+        return typeHashcode() == td.typeHashcode();
+    }
+
+    private int typeHashcode() {
+        if (typeHashcode == -1) {
+            StringBuffer sb = new StringBuffer();
+            int len = ItemList.size();
+            for (int i = 0; i < len - 1; ++i) {
+                sb.append(ItemList.get(i).fieldType.toString());
+                sb.append(", ");
+            }
+            sb.append(ItemList.get(len - 1).fieldType.toString());
+            typeHashcode = sb.toString().hashCode();
+        }
+        return typeHashcode;
     }
 
     public int hashCode() {
-        // If you want to use TupleDesc as keys for HashMap, implement this so
-        // that equal objects have equals hashCode() results
-        throw new UnsupportedOperationException("unimplemented");
+        if (hashcode == -1) {
+            hashcode = toString().hashCode();
+        }
+        return hashcode;
     }
 
     /**
@@ -221,13 +243,16 @@ public class TupleDesc implements Serializable {
      * @return String describing this descriptor.
      */
     public String toString() {
-        StringBuffer sb = new StringBuffer();
-        int len = ItemList.size();
-        for (int i = 0; i < len - 1; ++i) {
-            sb.append(ItemList.get(i).toString());
-            sb.append(", ");
+        if (tostring == null) {
+            StringBuffer sb = new StringBuffer();
+            int len = ItemList.size();
+            for (int i = 0; i < len - 1; ++i) {
+                sb.append(ItemList.get(i).toString());
+                sb.append(", ");
+            }
+            sb.append(ItemList.get(len - 1).toString());
+            tostring = sb.toString();
         }
-        sb.append(ItemList.get(len - 1).toString());
-        return sb.toString();
+        return tostring;
     }
 }

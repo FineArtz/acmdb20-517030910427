@@ -9,6 +9,13 @@ public class Join extends Operator {
 
     private static final long serialVersionUID = 1L;
 
+    private JoinPredicate predicate;
+    private DbIterator child1, child2;
+    private Tuple tuple1, tuple2;
+    private TupleDesc tupleDesc;
+    private boolean isEqPredicate;
+    private HashEquiJoin hashEquiJoin;
+
     /**
      * Constructor. Accepts to children to join and the predicate to join them
      * on
@@ -21,12 +28,18 @@ public class Join extends Operator {
      *            Iterator for the right(inner) relation to join
      */
     public Join(JoinPredicate p, DbIterator child1, DbIterator child2) {
-        // some code goes here
+        this.predicate = p;
+        this.child1 = child1;
+        this.child2 = child2;
+        this.tuple1 = null;
+        this.tuple2 = null;
+        this.tupleDesc = TupleDesc.merge(child1.getTupleDesc(), child2.getTupleDesc());
+        this.isEqPredicate = p.getOperator().equals(Predicate.Op.EQUALS);
+        this.hashEquiJoin = (isEqPredicate ? new HashEquiJoin(p, child1, child2) : null);
     }
 
     public JoinPredicate getJoinPredicate() {
-        // some code goes here
-        return null;
+        return predicate;
     }
 
     /**
@@ -35,8 +48,7 @@ public class Join extends Operator {
      *       alias or table name.
      * */
     public String getJoinField1Name() {
-        // some code goes here
-        return null;
+        return child1.getTupleDesc().getFieldName(predicate.getField1());
     }
 
     /**
@@ -45,8 +57,7 @@ public class Join extends Operator {
      *       alias or table name.
      * */
     public String getJoinField2Name() {
-        // some code goes here
-        return null;
+        return child2.getTupleDesc().getFieldName(predicate.getField2());
     }
 
     /**
@@ -54,21 +65,35 @@ public class Join extends Operator {
      *      implementation logic.
      */
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return tupleDesc;
     }
 
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
-        // some code goes here
+        if (isEqPredicate) {
+            hashEquiJoin.open();
+        }
+        else {
+            child1.open();
+            child2.open();
+        }
+        super.open();
     }
 
     public void close() {
-        // some code goes here
+        if (isEqPredicate) {
+            hashEquiJoin.close();
+        }
+        else {
+            child1.close();
+            child2.close();
+        }
+        super.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
-        // some code goes here
+        child1.rewind();
+        child2.rewind();
     }
 
     /**
@@ -90,19 +115,57 @@ public class Join extends Operator {
      * @see JoinPredicate#filter
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // some code goes here
+        if (isEqPredicate) {
+            return hashEquiJoin.fetchNext();
+        }
+        if (tuple1 == null) {
+            if (child1.hasNext()) {
+                tuple1 = child1.next();
+            }
+            else {
+                return null;
+            }
+        }
+        tuple2 = null;
+        while (tuple1 != null) {
+            while (child2.hasNext()) {
+                tuple2 = child2.next();
+                if (predicate.filter(tuple1, tuple2)) {
+                    Tuple tuple = new Tuple(TupleDesc.merge(tuple1.getTupleDesc(), tuple2.getTupleDesc()));
+                    int fieldNum1 = tuple1.getTupleDesc().numFields();
+                    int fieldNum2 = tuple2.getTupleDesc().numFields();
+                    for (int i = 0; i < fieldNum1; ++i) {
+                        tuple.setField(i, tuple1.getField(i));
+                    }
+                    for (int i = 0; i < fieldNum2; ++i) {
+                        tuple.setField(i + fieldNum1, tuple2.getField(i));
+                    }
+                    return tuple;
+                }
+            }
+            if (child1.hasNext()) {
+                tuple1 = child1.next();
+                child2.rewind();
+            }
+            else {
+                return null;
+            }
+        }
         return null;
     }
 
     @Override
     public DbIterator[] getChildren() {
-        // some code goes here
-        return null;
+        return new DbIterator[] {child1, child2};
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
-        // some code goes here
+        if (isEqPredicate) {
+            hashEquiJoin.setChildren(children);
+        }
+        child1 = children[0];
+        child2 = children[1];
     }
 
 }

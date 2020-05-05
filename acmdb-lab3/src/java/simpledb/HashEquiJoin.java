@@ -9,6 +9,12 @@ public class HashEquiJoin extends Operator {
 
     private static final long serialVersionUID = 1L;
 
+    private JoinPredicate predicate;
+    private DbIterator child1, child2;
+    private TupleDesc tupleDesc;
+    private Tuple tuple1;
+    private Map<Integer, ArrayList<Tuple>> hashTable = new HashMap<>();
+
     /**
      * Constructor. Accepts to children to join and the predicate to join them
      * on
@@ -21,42 +27,48 @@ public class HashEquiJoin extends Operator {
      *            Iterator for the right(inner) relation to join
      */
     public HashEquiJoin(JoinPredicate p, DbIterator child1, DbIterator child2) {
-        // some code goes here
+        this.predicate = p;
+        this.child1 = child1;
+        this.child2 = child2;
+        this.tupleDesc = TupleDesc.merge(child1.getTupleDesc(), child2.getTupleDesc());
+        this.tuple1 = null;
     }
 
     public JoinPredicate getJoinPredicate() {
-        // some code goes here
-        return null;
+        return predicate;
     }
 
     public TupleDesc getTupleDesc() {
-        // some code goes here
-        return null;
+        return tupleDesc;
     }
     
     public String getJoinField1Name()
     {
-        // some code goes here
-	return null;
+        return child1.getTupleDesc().getFieldName(predicate.getField1());
     }
 
     public String getJoinField2Name()
     {
-        // some code goes here
-        return null;
+        return child2.getTupleDesc().getFieldName(predicate.getField2());
     }
     
     public void open() throws DbException, NoSuchElementException,
             TransactionAbortedException {
-        // some code goes here
+        child1.open();
+        child2.open();
+        initHashMap();
+        super.open();
     }
 
     public void close() {
-        // some code goes here
+        child1.close();
+        child2.close();
+        super.close();
     }
 
     public void rewind() throws DbException, TransactionAbortedException {
-        // some code goes here
+        child1.rewind();
+        child2.rewind();
     }
 
     transient Iterator<Tuple> listIt = null;
@@ -80,19 +92,54 @@ public class HashEquiJoin extends Operator {
      * @see JoinPredicate#filter
      */
     protected Tuple fetchNext() throws TransactionAbortedException, DbException {
-        // some code goes here
-        return null;
+        if (listIt == null || !listIt.hasNext()) {
+            while (child1.hasNext()) {
+                tuple1 = child1.next();
+                Integer key = tuple1.getField(predicate.getField1()).hashCode();
+                ArrayList<Tuple> tuples = hashTable.get(key);
+                if (tuples != null) {
+                    listIt = tuples.iterator();
+                    break;
+                }
+            }
+        }
+        if (listIt == null || !listIt.hasNext()) {
+            return null;
+        }
+        Tuple tuple2 = listIt.next();
+        Tuple tuple = new Tuple(tupleDesc);
+        int fieldNum1 = tuple1.getTupleDesc().numFields();
+        int fieldNum2 = tuple2.getTupleDesc().numFields();
+        for (int i = 0; i < fieldNum1; ++i) {
+            tuple.setField(i, tuple1.getField(i));
+        }
+        for (int i = 0; i < fieldNum2; ++i) {
+            tuple.setField(i + fieldNum1, tuple2.getField(i));
+        }
+        return tuple;
     }
 
     @Override
     public DbIterator[] getChildren() {
-        // some code goes here
-        return null;
+        return new DbIterator[] {child1, child2};
     }
 
     @Override
     public void setChildren(DbIterator[] children) {
-        // some code goes here
+        child1 = children[0];
+        child2 = children[1];
+    }
+
+    private void initHashMap() throws DbException, NoSuchElementException,
+            TransactionAbortedException {
+        while (child2.hasNext()) {
+            Tuple tuple = child2.next();
+            Integer key = tuple.getField(predicate.getField2()).hashCode();
+            if (!hashTable.containsKey(key)) {
+                hashTable.put(key, new ArrayList<>());
+            }
+            hashTable.get(key).add(tuple);
+        }
     }
     
 }

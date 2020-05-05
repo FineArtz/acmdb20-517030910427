@@ -1,11 +1,22 @@
 package simpledb;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Knows how to compute some aggregate over a set of IntFields.
  */
 public class IntegerAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
+
+    private int gbField;
+    private Type gbFieldType;
+    private int agField;
+    private Op what;
+    private Map<Field, Integer> groups = new HashMap<>();
+    private Map<Field, Integer> avgCount = new HashMap<>();
 
     /**
      * Aggregate constructor
@@ -23,7 +34,10 @@ public class IntegerAggregator implements Aggregator {
      */
 
     public IntegerAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        this.gbField = gbfield;
+        this.gbFieldType = gbfieldtype;
+        this.agField = afield;
+        this.what = what;
     }
 
     /**
@@ -34,7 +48,28 @@ public class IntegerAggregator implements Aggregator {
      *            the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        Field gpValue = gbField == NO_GROUPING ? null : tup.getField(gbField);
+        Integer agValue = Integer.parseInt(tup.getField(agField).toString());
+        Integer oldValue = groups.get(gpValue);
+        Integer newValue = null;
+        switch (what) {
+            case MIN:
+                newValue = (oldValue == null ? agValue : Math.min(agValue, oldValue));
+                break;
+            case MAX:
+                newValue = (oldValue == null ? agValue : Math.max(agValue, oldValue));
+                break;
+            case AVG:
+                Integer cnt = avgCount.get(gpValue);
+                avgCount.put(gpValue, oldValue == null ? 1 : cnt + 1);
+            case SUM:
+                newValue = (oldValue == null ? agValue : agValue + oldValue);
+                break;
+            case COUNT:
+                newValue = (oldValue == null ? 1 : oldValue + 1);
+                break;
+        }
+        groups.put(gpValue, newValue);
     }
 
     /**
@@ -46,9 +81,32 @@ public class IntegerAggregator implements Aggregator {
      *         the constructor.
      */
     public DbIterator iterator() {
-        // some code goes here
-        throw new
-        UnsupportedOperationException("please implement me for lab3");
+        boolean NO_GROUP = gbField == NO_GROUPING;
+        ArrayList<Tuple> tuples = new ArrayList<>();
+        TupleDesc tupleDesc = new TupleDesc(
+                NO_GROUP ? new Type[] {Type.INT_TYPE} : new Type[] {gbFieldType, Type.INT_TYPE},
+                NO_GROUP ? new String[] {"aggregateValue"} : new String[] {"groupValue", "aggregateValue"});
+        for (Map.Entry<Field, Integer> entry : groups.entrySet()) {
+            Field gpValue = entry.getKey();
+            Integer agValue = entry.getValue();
+            /*
+             * Note that dynamically computing the average may cause decimal loss.
+             * A simple solution is computing it at final only once.
+             */
+            if (what == Op.AVG) {
+                agValue /= avgCount.get(gpValue);
+            }
+            Tuple tuple = new Tuple(tupleDesc);
+            if (NO_GROUP) {
+                tuple.setField(0, new IntField(agValue));
+            }
+            else {
+                tuple.setField(0, gpValue);
+                tuple.setField(1, new IntField(agValue));
+            }
+            tuples.add(tuple);
+        }
+        return new TupleIterator(tupleDesc, tuples);
     }
 
 }

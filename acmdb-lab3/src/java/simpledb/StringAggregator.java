@@ -1,11 +1,21 @@
 package simpledb;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Knows how to compute some aggregate over a set of StringFields.
  */
 public class StringAggregator implements Aggregator {
 
     private static final long serialVersionUID = 1L;
+
+    private int gbField;
+    private Type gbFieldType;
+    private int agField;
+    private Op what;
+    private Map<Field, Integer> groups = new HashMap<>();
 
     /**
      * Aggregate constructor
@@ -17,7 +27,13 @@ public class StringAggregator implements Aggregator {
      */
 
     public StringAggregator(int gbfield, Type gbfieldtype, int afield, Op what) {
-        // some code goes here
+        if (what != Op.COUNT) {
+            throw new IllegalArgumentException("Operator must be COUNT for String aggregator.");
+        }
+        this.gbField = gbfield;
+        this.gbFieldType = gbfieldtype;
+        this.agField = afield;
+        this.what = what;
     }
 
     /**
@@ -25,7 +41,9 @@ public class StringAggregator implements Aggregator {
      * @param tup the Tuple containing an aggregate field and a group-by field
      */
     public void mergeTupleIntoGroup(Tuple tup) {
-        // some code goes here
+        Field gpValue = tup.getField(gbField);
+        Integer oldValue = groups.get(gpValue);
+        groups.put(gpValue, oldValue == null ? 1 : oldValue + 1);
     }
 
     /**
@@ -37,8 +55,25 @@ public class StringAggregator implements Aggregator {
      *   aggregate specified in the constructor.
      */
     public DbIterator iterator() {
-        // some code goes here
-        throw new UnsupportedOperationException("please implement me for lab3");
+        boolean NO_GROUP = gbField == NO_GROUPING;
+        ArrayList<Tuple> tuples = new ArrayList<>();
+        TupleDesc tupleDesc = new TupleDesc(
+                NO_GROUP ? new Type[] {Type.INT_TYPE} : new Type[] {gbFieldType, Type.INT_TYPE},
+                NO_GROUP ? new String[] {"aggregateValue"} : new String[] {"groupValue", "aggregateValue"});
+        for (Map.Entry<Field, Integer> entry : groups.entrySet()) {
+            Field gpValue = entry.getKey();
+            Integer agValue = entry.getValue();
+            Tuple tuple = new Tuple(tupleDesc);
+            if (NO_GROUP) {
+                tuple.setField(0, new IntField(agValue));
+            }
+            else {
+                tuple.setField(0, gpValue);
+                tuple.setField(1, new IntField(agValue));
+            }
+            tuples.add(tuple);
+        }
+        return new TupleIterator(tupleDesc, tuples);
     }
 
 }
