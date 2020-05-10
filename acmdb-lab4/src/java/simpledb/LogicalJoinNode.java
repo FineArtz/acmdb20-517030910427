@@ -33,7 +33,7 @@ public class LogicalJoinNode {
         if (tmps.length>1)
             f1PureName = tmps[tmps.length-1];
         else
-            f1PureName=joinField1;
+            f1PureName = joinField1;
         tmps = joinField2.split("[.]");
         if (tmps.length>1)
             f2PureName = tmps[tmps.length-1];

@@ -4,6 +4,11 @@ package simpledb;
  */
 public class IntHistogram {
 
+    private int buckets, min, max;
+    private double width;
+    private int[] histogram;
+    private int ntups;
+
     /**
      * Create a new IntHistogram.
      * 
@@ -21,7 +26,12 @@ public class IntHistogram {
      * @param max The maximum integer value that will ever be passed to this class for histogramming
      */
     public IntHistogram(int buckets, int min, int max) {
-    	// some code goes here
+        this.buckets = buckets;
+    	this.min = min;
+    	this.max = max;
+    	this.width = (double) (max - min + 1) / buckets;
+    	this.histogram = new int[buckets];
+    	this.ntups = 0;
     }
 
     /**
@@ -29,7 +39,8 @@ public class IntHistogram {
      * @param v Value to add to the histogram
      */
     public void addValue(int v) {
-    	// some code goes here
+    	++histogram[bucketId(v, false)];
+    	++ntups;
     }
 
     /**
@@ -43,9 +54,46 @@ public class IntHistogram {
      * @return Predicted selectivity of this particular operator and value
      */
     public double estimateSelectivity(Predicate.Op op, int v) {
-
-    	// some code goes here
-        return -1.0;
+        int id = bucketId(v, true);
+        double ret = 0.0;
+        double err = 0.0;
+        double lower = min + id * width;
+        double upper = min + (id + 1) * width;
+        switch (op) {
+            case LESS_THAN_OR_EQ:
+                err = histogram[id] / (Math.floor(upper) - Math.ceil(lower) + Math.ceil(upper - (int) upper));
+            case LESS_THAN:
+                if (v <= min) {
+                    ret = 0.0;
+                }
+                else if (v > max) {
+                    ret = 1.0;
+                }
+                else {
+                    ret += (v - lower) / width * histogram[id] + err;
+                    for (int i = 0; i < id; ++i) {
+                        ret += histogram[i];
+                    }
+                    ret /= ntups;
+                }
+                break;
+            case GREATER_THAN:
+                ret = 1 - estimateSelectivity(Predicate.Op.LESS_THAN_OR_EQ, v);
+                break;
+            case GREATER_THAN_OR_EQ:
+                ret = 1 - estimateSelectivity(Predicate.Op.LESS_THAN, v);
+                break;
+            case EQUALS:
+                ret = estimateSelectivity(Predicate.Op.LESS_THAN_OR_EQ, v)
+                        - estimateSelectivity(Predicate.Op.LESS_THAN, v);
+                break;
+            case NOT_EQUALS:
+                ret = 1 - estimateSelectivity(Predicate.Op.EQUALS, v);
+                break;
+            case LIKE:
+                break;
+        }
+        return ret;
     }
     
     /**
@@ -58,15 +106,29 @@ public class IntHistogram {
      * */
     public double avgSelectivity()
     {
-        // some code goes here
-        return 1.0;
+        double ret = 0.0;
+        for (int i = 0; i < buckets; ++i) {
+            ret += histogram[i];
+        }
+        return ret / ntups;
     }
     
     /**
      * @return A string describing this histogram, for debugging purposes
      */
     public String toString() {
-        // some code goes here
-        return null;
+        return String.format("IntHistogram(buckets: %d, min: %d, max: %d)", buckets, min, max);
+    }
+
+    private int bucketId(int v, boolean project) {
+        if (project) {
+            v = Math.max(v, min);
+            v = Math.min(v, max);
+        }
+        if (v < min || v > max) {
+            throw new IllegalArgumentException(String.format(
+                    "Value %d out of range in IntHistogram(min %d, max %d).", v, min, max));
+        }
+        return (int)((v - min) / width);
     }
 }

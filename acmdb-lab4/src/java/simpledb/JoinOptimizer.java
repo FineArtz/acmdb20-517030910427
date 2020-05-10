@@ -107,11 +107,13 @@ public class JoinOptimizer {
             // You do not need to implement proper support for these for Lab 5.
             return card1 + cost1 + cost2;
         } else {
-            // Insert your code here.
-            // HINT: You may need to use the variable "j" if you implemented
-            // a join algorithm that's more complicated than a basic
-            // nested-loops join.
-            return -1.0;
+            /*if (j.p == Predicate.Op.EQUALS) {
+                return cost1 + cost2 + (card1 + card2) * Math.log(card2);
+            }
+            else {
+                return cost1 + card1 * cost2 + card1 * card2;
+            }*/
+            return cost1 + card1 * cost2 + card1 * card2;
         }
     }
 
@@ -155,9 +157,25 @@ public class JoinOptimizer {
             String field2PureName, int card1, int card2, boolean t1pkey,
             boolean t2pkey, Map<String, TableStats> stats,
             Map<String, Integer> tableAliasToId) {
-        int card = 1;
-        // some code goes here
-        return card <= 0 ? 1 : card;
+        int card;
+        if (joinOp == Predicate.Op.EQUALS) {
+            if (t1pkey && t2pkey) {
+                card = Math.min(card1, card2);
+            }
+            else if (t1pkey) {
+                card = card2;
+            }
+            else if (t2pkey) {
+                card = card1;
+            }
+            else {
+                card = Math.max(card1, card2);
+            }
+        }
+        else {
+            card = (int) (0.3 * card1 * card2);
+        }
+        return card;
     }
 
     /**
@@ -170,7 +188,7 @@ public class JoinOptimizer {
      *            The size of the subsets of interest
      * @return a set of all subsets of the specified size
      */
-    @SuppressWarnings("unchecked")
+    /*@SuppressWarnings("unchecked")
     public <T> Set<Set<T>> enumerateSubsets(Vector<T> v, int size) {
         Set<Set<T>> els = new HashSet<Set<T>>();
         els.add(new HashSet<T>());
@@ -190,7 +208,54 @@ public class JoinOptimizer {
         }
 
         return els;
+    }*/
 
+    private List<Set<List<Integer>>> allSubsetIndices = null;
+
+    /**
+     * Helper method to enumerate all of the subsets of a given size of a
+     * specified vector.
+     * A faster implementation using bit operation.
+     *
+     * @param v
+     *            The vector whose subsets are desired
+     * @param size
+     *            The size of the subsets of interest
+     * @return a set of all subsets of the specified size
+     */
+    public <T> Set<Set<T>> enumerateSubsets(Vector<T> v, int size) {
+        Set<Set<T>> els = new HashSet<>();
+        Set<List<Integer>> indicesSet = getSubsetIndex(v.size(), size);
+        for (List<Integer> indices : indicesSet) {
+            Set<T> set = new HashSet<>();
+            for (Integer index : indices) {
+                set.add(v.get(index));
+            }
+            els.add(set);
+        }
+        return els;
+    }
+
+    private Set<List<Integer>> getSubsetIndex(int n, int size) {
+        if (allSubsetIndices == null) {
+            allSubsetIndices = new ArrayList<>();
+            for (int i = 0; i < n; ++i) {
+                allSubsetIndices.add(new HashSet<>());
+            }
+            for (int i = 0; i < (1 << n); ++i) {
+                List<Integer> indices = new ArrayList<>();
+                for (int j = 0; j < n; ++j) {
+                    if ((i & (1 << j)) != 0) {
+                        indices.add(j);
+                    }
+                }
+                if (indices.isEmpty()) {
+                    continue;
+                }
+                allSubsetIndices.get(indices.size() - 1).add(indices);
+            }
+        }
+        return allSubsetIndices.get(size - 1);
     }
 
     /**
@@ -217,11 +282,31 @@ public class JoinOptimizer {
             HashMap<String, TableStats> stats,
             HashMap<String, Double> filterSelectivities, boolean explain)
             throws ParsingException {
-        //Not necessary for labs 1--3
-
-        // some code goes here
-        //Replace the following
-        return joins;
+        PlanCache planCache = new PlanCache();
+        int size = joins.size();
+        for (int i = 1; i <= size; ++i) {
+            Set<Set<LogicalJoinNode>> subsets = enumerateSubsets(joins, i);
+            for (Set<LogicalJoinNode> s : subsets) {
+                double bestCostSoFar = Double.MAX_VALUE;
+                for (LogicalJoinNode sp : s) {
+                    CostCard subplan = computeCostAndCardOfSubplan(
+                            stats, filterSelectivities, sp, s, bestCostSoFar, planCache
+                    );
+                    if (subplan == null) {
+                        continue;
+                    }
+                    if (subplan.cost < bestCostSoFar) {
+                        bestCostSoFar = subplan.cost;
+                        planCache.addPlan(s, bestCostSoFar, subplan.card, subplan.plan);
+                    }
+                }
+            }
+        }
+        Vector<LogicalJoinNode> ret = planCache.getOrder(new HashSet<>(joins));
+        if (explain) {
+            printJoins(ret, planCache, stats, filterSelectivities);
+        }
+        return ret;
     }
 
     // ===================== Private Methods =================================
