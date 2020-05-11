@@ -107,13 +107,12 @@ public class JoinOptimizer {
             // You do not need to implement proper support for these for Lab 5.
             return card1 + cost1 + cost2;
         } else {
-            /*if (j.p == Predicate.Op.EQUALS) {
-                return cost1 + cost2 + (card1 + card2) * Math.log(card2);
+            if (j.p == Predicate.Op.EQUALS) {
+                return cost1 + cost2 + card1 * card2 * 0.6;
             }
             else {
                 return cost1 + card1 * cost2 + card1 * card2;
-            }*/
-            return cost1 + card1 * cost2 + card1 * card2;
+            }
         }
     }
 
