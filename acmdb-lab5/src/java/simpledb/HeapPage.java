@@ -85,12 +85,12 @@ public class HeapPage implements Page {
     public HeapPage getBeforeImage(){
         try {
             byte[] oldDataRef = null;
-            synchronized(oldDataLock)
-            {
+            synchronized(oldDataLock) {
                 oldDataRef = oldData;
             }
             return new HeapPage(pid,oldDataRef);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
             //should never happen -- we parsed it OK before!
             System.exit(1);
@@ -99,9 +99,8 @@ public class HeapPage implements Page {
     }
     
     public void setBeforeImage() {
-        synchronized(oldDataLock)
-        {
-        oldData = getPageData().clone();
+        synchronized(oldDataLock) {
+            oldData = getPageData().clone();
         }
     }
 

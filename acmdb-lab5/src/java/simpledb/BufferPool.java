@@ -53,8 +53,82 @@ public class BufferPool {
     }
 
     private int numPages;
-    private Map<PageId, Page> pageMap = new HashMap<>();
-    private Map<PageId, HitRate> LFUCount = new HashMap<>();
+    private Map<PageId, Page> pageMap = new ConcurrentHashMap<>();
+    private Map<PageId, HitRate> LFUCount = new ConcurrentHashMap<>();
+
+    public enum LockType implements Serializable {
+        SHARED, EXCLUSIVE;
+        public static LockType getLock(int i) {
+            return values()[i];
+        }
+    }
+
+    private class Lock {
+        private TransactionId tid;
+        private LockType lockType;
+
+        public Lock(TransactionId tid, LockType lockType) {
+            this.tid = tid;
+            this.lockType = lockType;
+        }
+
+        public void setLockType(LockType lockType) {
+            this.lockType = lockType;
+        }
+
+        public TransactionId getTid() {
+            return tid;
+        }
+
+        public LockType getLockType() {
+            return lockType;
+        }
+    }
+
+    private Map<PageId, List<Lock>> pageLockMap = new ConcurrentHashMap<>();
+    // Locks are on granularity of pages, therefor transactionLockMap is redundant.
+    // private Map<PageId, Lock> transactionLockMap = new ConcurrentHashMap<>();
+
+    private synchronized boolean acquireLock(TransactionId tid, PageId pid, LockType lockType) {
+        if (!pageLockMap.containsKey(pid)) {
+            // No lock on the page, simply add a new lock.
+            Lock lock = new Lock(tid, lockType);
+            pageLockMap.put(pid, new ArrayList<>(Collections.singleton(lock)));
+            return true;
+        }
+
+        List<Lock> lockList = pageLockMap.get(pid);
+        assert !lockList.isEmpty();
+        for (Lock lock : lockList) {
+            if (lock.getTid().equals(tid)) {
+                if (lock.getLockType() == lockType || lock.getLockType() == LockType.EXCLUSIVE) {
+                    return true;
+                }
+                if (lockList.size() == 1) {
+                    // Upgrade the lock to EXCLUSIVE.
+                    lock.setLockType(LockType.EXCLUSIVE);
+                    return true;
+                }
+                // Already holds a shared lock, but requires an exclusive lock.
+                return false;
+            }
+        }
+
+        if (lockList.get(0).getLockType() == LockType.EXCLUSIVE) {
+            // This must be an exclusive lock
+            assert lockList.size() == 1;
+            return false;
+        }
+        if (lockType == LockType.SHARED) {
+            Lock lock = new Lock(tid, LockType.SHARED);
+            lockList.add(lock);
+            pageLockMap.put(pid, lockList);
+            return true;
+        }
+
+        // Require an exclusive lock, but shared lock(s) has already existed.
+        return false;
+    }
 
     /**
      * Creates a BufferPool that caches up to numPages pages.
@@ -94,8 +168,14 @@ public class BufferPool {
      * @param pid the ID of the requested page
      * @param perm the requested permissions on the page
      */
-    public Page getPage(TransactionId tid, PageId pid, Permissions perm)
+    public Page getPage(TransactionId tid, PageId pid, Permissions perm, int debug)
         throws TransactionAbortedException, DbException {
+        boolean success =
+                acquireLock(tid, pid, perm == Permissions.READ_ONLY ? LockType.SHARED : LockType.EXCLUSIVE);
+        if (!success) {
+            throw new TransactionAbortedException();
+        }
+
         Page page = pageMap.get(pid);
         if (page == null) {
             while (pageMap.size() > numPages) {
@@ -108,6 +188,10 @@ public class BufferPool {
         addHitCount(pid);
         return page;
     }
+    public Page getPage(TransactionId tid, PageId pid, Permissions perm)
+            throws TransactionAbortedException, DbException {
+        return getPage(tid, pid, perm, -1);
+    }
 
     /**
      * Releases the lock on a page.
@@ -118,9 +202,22 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      * @param pid the ID of the page to unlock
      */
-    public  void releasePage(TransactionId tid, PageId pid) {
-        // some code goes here
-        // not necessary for lab1|lab2
+    public void releasePage(TransactionId tid, PageId pid) {
+        assert pageLockMap.containsKey(pid);
+        List<Lock> lockList = pageLockMap.get(pid);
+        Iterator<Lock> lockIterator = lockList.iterator();
+        synchronized (lockIterator) {
+            while (lockIterator.hasNext()) {
+                Lock lock = lockIterator.next();
+                if (lock.getTid().equals(tid)) {
+                    lockIterator.remove();
+                    if (lockList.isEmpty()) {
+                        pageLockMap.remove(pid);
+                    }
+                    return;
+                }
+            }
+        }
     }
 
     /**
@@ -129,15 +226,22 @@ public class BufferPool {
      * @param tid the ID of the transaction requesting the unlock
      */
     public void transactionComplete(TransactionId tid) throws IOException {
-        // some code goes here
-        // not necessary for lab1|lab2
+        transactionComplete(tid, true);
     }
 
     /** Return true if the specified transaction has a lock on the specified page */
     public boolean holdsLock(TransactionId tid, PageId p) {
-        // some code goes here
-        // not necessary for lab1|lab2
-        return false;
+        synchronized (pageLockMap) {
+            if (pageLockMap.containsKey(p)) {
+                List<Lock> lockList = pageLockMap.get(p);
+                for (Lock lock : lockList) {
+                    if (lock.getTid().equals(tid)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 
     /**
@@ -149,8 +253,24 @@ public class BufferPool {
      */
     public void transactionComplete(TransactionId tid, boolean commit)
         throws IOException {
-        // some code goes here
-        // not necessary for lab1|lab2
+        if (commit) {
+            flushPages(tid);
+        }
+        else {
+            synchronized (pageMap) {
+                for (PageId pid : pageMap.keySet()) {
+                    Page page = pageMap.get(pid);
+                    if (page.isDirty().equals(tid)) {
+                        pageMap.put(pid, Database.getCatalog().getDatabaseFile(pid.getTableId()).readPage(pid));
+                    }
+                }
+            }
+        }
+        for (PageId pid : pageMap.keySet()) {
+            if (holdsLock(tid, pid)) {
+                releasePage(tid, pid);
+            }
+        }
     }
 
     /**
@@ -198,7 +318,7 @@ public class BufferPool {
      * @param tid the transaction deleting the tuple.
      * @param t the tuple to delete
      */
-    public  void deleteTuple(TransactionId tid, Tuple t)
+    public void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
         int tableId = t.getRecordId().getPageId().getTableId();
         ArrayList<Page> pageArrayList = Database.getCatalog().getDatabaseFile(tableId).deleteTuple(tid, t);
@@ -252,7 +372,7 @@ public class BufferPool {
      * Flushes a certain page to disk
      * @param pid an ID indicating the page to flush
      */
-    private synchronized  void flushPage(PageId pid) throws IOException {
+    private synchronized void flushPage(PageId pid) throws IOException {
         Page page = pageMap.get(pid);
         try {
             page.markDirty(false, null);
@@ -265,16 +385,19 @@ public class BufferPool {
 
     /** Write all pages of the specified transaction to disk.
      */
-    public synchronized  void flushPages(TransactionId tid) throws IOException {
-        // some code goes here
-        // not necessary for lab1|lab2
+    public synchronized void flushPages(TransactionId tid) throws IOException {
+        for (Page page : pageMap.values()) {
+            if (page.isDirty().equals(tid)) {
+                flushPage(page.getId());
+            }
+        }
     }
 
     /**
      * Discards a page from the buffer pool.
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
-    private synchronized  void evictPage() throws DbException {
+    private synchronized void evictPage() throws DbException {
         HitRate LFUPage = Collections.min(LFUCount.values());
         try {
             flushPage(LFUPage.pageId);
