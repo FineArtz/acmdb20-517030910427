@@ -316,14 +316,12 @@ public class TestUtil {
         Object alock;
         Object elock;
 
-        int debug = -1;
-
         /**
          * @param tid the transaction on whose behalf we want to acquire the lock
          * @param pid the page over which we want to acquire the lock
          * @param perm the desired lock permissions
          */
-        public LockGrabber(TransactionId tid, PageId pid, Permissions perm, int debug) {
+        public LockGrabber(TransactionId tid, PageId pid, Permissions perm) {
             this.tid = tid;
             this.pid = pid;
             this.perm = perm;
@@ -331,15 +329,11 @@ public class TestUtil {
             this.error = null;
             this.alock = new Object();
             this.elock = new Object();
-            this.debug = debug;
-        }
-        public LockGrabber(TransactionId tid, PageId pid, Permissions perm) {
-            this(tid, pid, perm, -1);
         }
 
         public void run() {
             try {
-                Database.getBufferPool().getPage(tid, pid, perm, debug);
+                Database.getBufferPool().getPage(tid, pid, perm);
                 synchronized(alock) {
                     acquired = true;
                 }
