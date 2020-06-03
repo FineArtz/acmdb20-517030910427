@@ -150,10 +150,12 @@ public class TableStats {
                 }
             }
             seqScan.close();
+            Database.getBufferPool().transactionComplete(tid, true);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     /**

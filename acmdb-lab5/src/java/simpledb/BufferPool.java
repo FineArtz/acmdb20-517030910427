@@ -124,6 +124,7 @@ public class BufferPool {
         private Map<TransactionId, Set<PageId>> tidLockMap = new ConcurrentHashMap<>();
 
         synchronized boolean acquireLock(TransactionId tid, PageId pid, LockType lockType) {
+            // checkSize();
             if (!pageLockMap.containsKey(pid)) {
                 // No lock on the page, simply accept the lock.
                 Lock lock = new Lock(tid, lockType);
@@ -148,6 +149,11 @@ public class BufferPool {
                     flag = isSameTid;
                 }
                 else {
+                    if (tidLockMap.containsKey(tid) && tidLockMap.get(tid).contains(pid)) {
+                        // a SHARED lock already exists, and the same transaction requires
+                        // a SHARED lock
+                        return true;
+                    }
                     lockSet.add(new Lock(tid, LockType.SHARED));
                     flag = true;
                 }
@@ -181,6 +187,7 @@ public class BufferPool {
                 }
                 tidLockMap.get(tid).add(pid);
             }
+            // checkSize();
             return flag;
         }
 
@@ -233,6 +240,21 @@ public class BufferPool {
 
         Set<PageId> getTidLocks(TransactionId tid) {
             return tidLockMap.get(tid);
+        }
+
+        private synchronized void checkSize() {
+            // only for debug
+            int size1 = 0;
+            for (Set<Lock> lockSet : pageLockMap.values()) {
+                assert lockSet.size() <= tidLockMap.size();
+                size1 += lockSet.size();
+            }
+            int size2 = 0;
+            for (Set<PageId> pageIdSet : tidLockMap.values()) {
+                assert pageIdSet.size() <= pageLockMap.size();
+                size2 += pageIdSet.size();
+            }
+            assert size1 == size2;
         }
     }
 
