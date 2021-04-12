@@ -24,7 +24,7 @@ public class HeapFile implements DbFile {
         private int pageNo, tableId;
         private Iterator<Tuple> tupleIterator;
 
-        public HeapFileIterator(TransactionId tid) {
+        HeapFileIterator(TransactionId tid) {
             this.transactionId = tid;
             this.pageNo = 0;
             this.tableId = getId();
@@ -35,7 +35,8 @@ public class HeapFile implements DbFile {
         public void open() throws DbException, TransactionAbortedException {
             pageNo = 0;
             PageId pageId = new HeapPageId(tableId, pageNo);
-            HeapPage heapPage = (HeapPage) Database.getBufferPool().getPage(transactionId, pageId, Permissions.READ_WRITE);
+            HeapPage heapPage = (HeapPage) Database.getBufferPool().getPage(
+                    transactionId, pageId, Permissions.READ_WRITE);
             tupleIterator = heapPage.iterator();
         }
 
@@ -52,7 +53,8 @@ public class HeapFile implements DbFile {
             if (!tupleIterator.hasNext()) {
                 ++pageNo;
                 PageId pageId = new HeapPageId(tableId, pageNo);
-                HeapPage heapPage = (HeapPage) Database.getBufferPool().getPage(transactionId, pageId, Permissions.READ_WRITE);
+                HeapPage heapPage = (HeapPage) Database.getBufferPool().getPage(
+                        transactionId, pageId, Permissions.READ_WRITE);
                 tupleIterator = heapPage.iterator();
             }
             return tupleIterator.next();
@@ -125,7 +127,8 @@ public class HeapFile implements DbFile {
         int len = BufferPool.getPageSize();
         long offset = pgNo * len;
         if (len + offset > file.length()) {
-            throw new IllegalArgumentException(String.format("Page %d does not exist in file %d.", pid.pageNumber(), getId()));
+            throw new IllegalArgumentException(String.format(
+                    "Page %d does not exist in file %d.", pid.pageNumber(), getId()));
         }
         byte[] data = new byte[len];
         try {
@@ -135,7 +138,8 @@ public class HeapFile implements DbFile {
             return new HeapPage((HeapPageId) pid, data);
         }
         catch (IOException e) {
-            throw new IllegalArgumentException(String.format("IO exception occurred when reading page %d of file %d.", pid.pageNumber(), getId()));
+            throw new IllegalArgumentException(String.format(
+                    "IO exception occurred when reading page %d of file %d.", pid.pageNumber(), getId()));
         }
     }
 

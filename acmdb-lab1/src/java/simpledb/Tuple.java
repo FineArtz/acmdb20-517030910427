@@ -1,9 +1,6 @@
 package simpledb;
 
-import com.sun.org.apache.regexp.internal.RE;
-
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -19,7 +16,7 @@ public class Tuple implements Serializable {
 
     private TupleDesc tupleDesc;
     private RecordId recordId;
-    private List<Field> fields = new ArrayList<>();
+    private List<Field> fields;
 
     /**
      * Create a new tuple with the specified schema (type).
@@ -89,7 +86,7 @@ public class Tuple implements Serializable {
      * where \t is any whitespace (except a newline)
      */
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int len = fields.size();
         for (int i = 0; i < len - 1; ++i) {
             sb.append(fields.get(i).toString());

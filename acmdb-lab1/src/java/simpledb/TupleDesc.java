@@ -84,9 +84,9 @@ public class TupleDesc implements Serializable {
         }
         int len = typeAr.length;
         assert len >= 1;
-        for (int i = 0; i < len; ++i) {
-            ItemList.add(new TDItem(typeAr[i], null));
-            size += typeAr[i].getLen();
+        for (Type tp : typeAr) {
+            ItemList.add(new TDItem(tp, null));
+            size += tp.getLen();
         }
     }
 
@@ -221,7 +221,7 @@ public class TupleDesc implements Serializable {
      * @return String describing this descriptor.
      */
     public String toString() {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         int len = ItemList.size();
         for (int i = 0; i < len - 1; ++i) {
             sb.append(ItemList.get(i).toString());

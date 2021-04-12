@@ -1,13 +1,10 @@
 package simpledb;
 
-import javafx.util.Pair;
-
 import java.io.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -32,7 +29,7 @@ public class BufferPool {
     public static final int DEFAULT_PAGES = 50;
 
     private int numPages;
-    private List<Page> pages = new ArrayList<>();
+    private List<Page> pages;
     /**
      * Creates a BufferPool that caches up to numPages pages.
      *

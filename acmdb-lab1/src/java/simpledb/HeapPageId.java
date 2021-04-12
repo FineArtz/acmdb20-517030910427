@@ -53,12 +53,7 @@ public class HeapPageId implements PageId {
             return false;
         }
         PageId pid = (PageId) o;
-        if (pid.getTableId() == tableId && pid.pageNumber() == pageNo) {
-            return true;
-        }
-        else {
-            return false;
-        }
+         return (pid.getTableId() == tableId && pid.pageNumber() == pageNo);
     }
 
     /**

@@ -53,12 +53,7 @@ public class RecordId implements Serializable {
             return false;
         }
         RecordId rid = (RecordId) o;
-        if (rid.pageId.equals(pageId) && rid.tupleNumber == tupleNumber) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return (rid.pageId.equals(pageId) && rid.tupleNumber == tupleNumber);
     }
 
     /**

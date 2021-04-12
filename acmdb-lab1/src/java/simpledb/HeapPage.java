@@ -20,7 +20,7 @@ public class HeapPage implements Page {
     final int numSlots;
 
     byte[] oldData;
-    private final Byte oldDataLock = new Byte((byte) 0);
+    private final Byte oldDataLock = (byte) 0;
 
     private ArrayList<Tuple> tupleList = new ArrayList<>();
 
@@ -295,12 +295,7 @@ public class HeapPage implements Page {
             return true;
         }
         byte b = header[i / 8];
-        if ((b >> (i % 8) & 1) == 1) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return ((b >> (i % 8) & 1) == 1);
     }
 
     /**

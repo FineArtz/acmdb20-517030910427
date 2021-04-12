@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Catalog keeps track of all available tables in the database and their
@@ -23,7 +22,7 @@ public class Catalog {
         private String name;
         private String pkeyField;
 
-        public Table(DbFile file, String name, String pkeyField) {
+        Table(DbFile file, String name, String pkeyField) {
             this.file = file;
             this.name = name;
             this.pkeyField = pkeyField;
@@ -33,11 +32,11 @@ public class Catalog {
             return file;
         }
 
-        public String getName() {
+        String getName() {
             return name;
         }
 
-        public String getPkeyField() {
+        String getPkeyField() {
             return pkeyField;
         }
 
@@ -52,14 +51,6 @@ public class Catalog {
         public void setFile(DbFile file) {
             this.file = file;
         }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public void setPkeyField(String pkeyField) {
-            this.pkeyField = pkeyField;
-        }
     }
     private Map<Integer, Table> tableMap = new HashMap<>();
     private Map<String, Integer> idMap = new HashMap<>();
@@ -69,7 +60,8 @@ public class Catalog {
      * Creates a new, empty catalog.
      */
     public Catalog() {
-        // some code goes here
+        // Invokes the constructor of members automatically,
+        // no more codes is needed here.
     }
 
     /**
@@ -169,7 +161,7 @@ public class Catalog {
     
     /**
      * Reads the schema from a file and creates the appropriate tables in the database.
-     * @param catalogFile
+     * @param catalogFile the file to load
      */
     public void loadSchema(String catalogFile) {
         String line = "";
