@@ -1,11 +1,9 @@
 package simpledb;
 
-import javafx.util.Pair;
 
 import java.io.*;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -34,7 +32,7 @@ public class BufferPool {
         private int hitCount;
         private long hitTime;
 
-        public HitRate(PageId pageId, int hitCount, long hitTime) {
+        HitRate(PageId pageId, int hitCount, long hitTime) {
             this.pageId = pageId;
             this.hitCount = hitCount;
             this.hitTime = hitTime;
@@ -171,18 +169,7 @@ public class BufferPool {
     public void insertTuple(TransactionId tid, int tableId, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
         ArrayList<Page> pageArrayList = Database.getCatalog().getDatabaseFile(tableId).insertTuple(tid, t);
-        for (Page page : pageArrayList) {
-            PageId pageId = page.getId();
-            if (!pageMap.containsKey(pageId)) {
-                while (pageMap.size() >= numPages) {
-                    evictPage();
-                }
-            }
-            page.markDirty(true, tid);
-            pageId = page.getId();
-            pageMap.put(pageId, page);
-            LFUCount.put(pageId, new HitRate(pageId, 1, System.nanoTime()));
-        }
+        markDirty(tid, pageArrayList);
     }
 
     /**
@@ -198,22 +185,11 @@ public class BufferPool {
      * @param tid the transaction deleting the tuple.
      * @param t the tuple to delete
      */
-    public  void deleteTuple(TransactionId tid, Tuple t)
+    public void deleteTuple(TransactionId tid, Tuple t)
         throws DbException, IOException, TransactionAbortedException {
         int tableId = t.getRecordId().getPageId().getTableId();
         ArrayList<Page> pageArrayList = Database.getCatalog().getDatabaseFile(tableId).deleteTuple(tid, t);
-        for (Page page : pageArrayList) {
-            PageId pageId = page.getId();
-            if (!pageMap.containsKey(pageId)) {
-                while (pageMap.size() >= numPages) {
-                    evictPage();
-                }
-            }
-            page.markDirty(true, tid);
-            pageId = page.getId();
-            pageMap.put(pageId, page);
-            LFUCount.put(pageId, new HitRate(pageId, 1, System.nanoTime()));
-        }
+        markDirty(tid, pageArrayList);
     }
 
     /**
@@ -252,7 +228,7 @@ public class BufferPool {
      * Flushes a certain page to disk
      * @param pid an ID indicating the page to flush
      */
-    private synchronized  void flushPage(PageId pid) throws IOException {
+    private synchronized void flushPage(PageId pid) throws IOException {
         Page page = pageMap.get(pid);
         try {
             page.markDirty(false, null);
@@ -274,13 +250,14 @@ public class BufferPool {
      * Discards a page from the buffer pool.
      * Flushes the page to disk to ensure dirty pages are updated on disk.
      */
-    private synchronized  void evictPage() throws DbException {
+    private synchronized void evictPage() throws DbException {
         HitRate LFUPage = Collections.min(LFUCount.values());
         try {
             flushPage(LFUPage.pageId);
         }
         catch (IOException e) {
-            throw new DbException(String.format("IOException occurred when flushing page %d.", LFUPage.pageId.hashCode()));
+            throw new DbException(String.format(
+                    "IOException occurred when flushing page %d.", LFUPage.pageId.hashCode()));
         }
         pageMap.remove(LFUPage.pageId);
         LFUCount.remove(LFUPage.pageId);
@@ -293,5 +270,21 @@ public class BufferPool {
         }
         ++hitRate.hitCount;
         hitRate.hitTime = System.nanoTime();
+    }
+
+    private void markDirty(TransactionId tid, ArrayList<Page> dirtyPages)
+            throws DbException, IOException, TransactionAbortedException {
+        for (Page page : dirtyPages) {
+            PageId pageId = page.getId();
+            if (!pageMap.containsKey(pageId)) {
+                while (pageMap.size() >= numPages) {
+                    evictPage();
+                }
+            }
+            page.markDirty(true, tid);
+            pageId = page.getId();
+            pageMap.put(pageId, page);
+            LFUCount.put(pageId, new HitRate(pageId, 1, System.nanoTime()));
+        }
     }
 }

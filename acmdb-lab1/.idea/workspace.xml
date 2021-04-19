@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7fbb29e3-c6b1-4e7f-9c5a-7680c9f24e65" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/libraries/lib.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/lib.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/BufferPool.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/BufferPool.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/Catalog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/Catalog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/HeapFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/HeapFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/HeapPage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/HeapPage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/HeapPageId.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/HeapPageId.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/RecordId.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/RecordId.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/SeqScan.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/SeqScan.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/Tuple.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/Tuple.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/java/simpledb/TupleDesc.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/java/simpledb/TupleDesc.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../azure-pipelines.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../azure-pipelines.yml" afterDir="false" />
-    </list>
+    <list default="true" id="7fbb29e3-c6b1-4e7f-9c5a-7680c9f24e65" name="Default Changelist" comment="" />
     <ignored path="$PROJECT_DIR$/bin/src/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -23,7 +10,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf />
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
@@ -177,6 +164,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="PackagesPane" />
       <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
@@ -212,7 +200,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -345,6 +332,7 @@
       <workItem from="1617171817109" duration="1535000" />
       <workItem from="1618209044000" duration="4233000" />
       <workItem from="1618215104471" duration="307000" />
+      <workItem from="1618816734810" duration="41000" />
     </task>
     <servers />
   </component>
@@ -381,12 +369,12 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="43469000" />
+    <option name="totallyTimeSpent" value="43510000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="878" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.25670242" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.2600536" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="Image Layers" order="3" />

@@ -2,7 +2,6 @@ package simpledb;
 
 import java.io.*;
 import java.util.*;
-import java.nio.channels.FileChannel;
 
 import simpledb.Predicate.Op;
 
@@ -201,7 +200,7 @@ public class BTreeFile implements DbFile {
 		BTreeInternalPage internalPage = (BTreeInternalPage) getPage(tid, dirtypages, pid, Permissions.READ_ONLY);
 		BTreeInternalPageIterator internalPageIterator = (BTreeInternalPageIterator) internalPage.iterator();
 		if (f == null) {
-			return findLeafPage(tid, dirtypages, internalPageIterator.next().getLeftChild(), perm, f);
+			return findLeafPage(tid, dirtypages, internalPageIterator.next().getLeftChild(), perm, null);
 		}
 		BTreeEntry entry = null;
 		while (internalPageIterator.hasNext()) {
@@ -229,7 +228,7 @@ public class BTreeFile implements DbFile {
 	BTreeLeafPage findLeafPage(TransactionId tid, BTreePageId pid, Permissions perm,
 			Field f) 
 					throws DbException, TransactionAbortedException {
-		return findLeafPage(tid, new HashMap<PageId, Page>(), pid, perm, f);
+		return findLeafPage(tid, new HashMap<>(), pid, perm, f);
 	}
 
 	/**
@@ -331,7 +330,7 @@ public class BTreeFile implements DbFile {
 		// but not COPIED, which is different from splitting the
 		// leaf page.
 		BTreeInternalPageReverseIterator curPageRIterator = (BTreeInternalPageReverseIterator) page.reverseIterator();
-		BTreeEntry middleEntry = null;
+		BTreeEntry middleEntry;
 		for (int i = size; i > size / 2 + 1; --i) {
 			middleEntry = curPageRIterator.next();
 			page.deleteKeyAndRightChild(middleEntry);
@@ -748,22 +747,11 @@ public class BTreeFile implements DbFile {
 		int newSize = (size + siblingSize) / 2;
 		assert newSize > size;
 
-		// pull down parent entry
-		/**
-		 *  Note that directly invoking `BTIP.getChildId(i)` may lead to
-		 *  NullPointerException for the i-th child could not lay in
-		 *  the i-th slot.
-		 *  @see BTreeInternalPage#getChildId(int)
-		 */
-		Field parentKey = parentEntry.getKey();
-		BTreePageId leftChildId = leftSibling.reverseIterator().next().getRightChild();
-		BTreePageId rightChileId = page.iterator().next().getLeftChild();
-		BTreeEntry pulledDownEntry = new BTreeEntry(parentKey, leftChildId, rightChileId);
-		page.insertEntry(pulledDownEntry);
+		pullDownParentEntry(page, leftSibling, parentEntry, true);
 
 		// move entries
 		BTreeInternalPageReverseIterator siblingRIterator = (BTreeInternalPageReverseIterator) leftSibling.reverseIterator();
-		BTreeEntry keyEntry = null;
+		BTreeEntry keyEntry;
 		for (int i = 0; i < newSize - size - 1; ++i) {
 			keyEntry = siblingRIterator.next();
 			leftSibling.deleteKeyAndRightChild(keyEntry);
@@ -778,7 +766,7 @@ public class BTreeFile implements DbFile {
 		parent.updateEntry(parentEntry);
 		updateParentPointers(tid, dirtypages, page);
 	}
-	
+
 	/**
 	 * Steal entries from the right sibling and copy them to the given page so that both pages are at least
 	 * half full. Keys can be thought of as rotating through the parent entry, so the original key in the 
@@ -805,16 +793,11 @@ public class BTreeFile implements DbFile {
 		int newSize = (size + siblingSize) / 2;
 		assert newSize > size;
 
-		// pull down parent entry
-		Field parentKey = parentEntry.getKey();
-		BTreePageId leftChildId = page.reverseIterator().next().getRightChild();
-		BTreePageId rightChileId = rightSibling.iterator().next().getLeftChild();
-		BTreeEntry pulledDownEntry = new BTreeEntry(parentKey, leftChildId, rightChileId);
-		page.insertEntry(pulledDownEntry);
+		pullDownParentEntry(page, rightSibling, parentEntry, false);
 
 		// move entries
 		BTreeInternalPageIterator siblingIterator = (BTreeInternalPageIterator) rightSibling.iterator();
-		BTreeEntry keyEntry = null;
+		BTreeEntry keyEntry;
 		for (int i = 0; i < newSize - size - 1; ++i) {
 			keyEntry = siblingIterator.next();
 			rightSibling.deleteKeyAndLeftChild(keyEntry);
@@ -828,6 +811,24 @@ public class BTreeFile implements DbFile {
 		parentEntry.setKey(keyEntry.getKey());
 		parent.updateEntry(parentEntry);
 		updateParentPointers(tid, dirtypages, page);
+	}
+
+	/**
+	 *  Note that directly invoking `BTIP.getChildId(i)` may lead to
+	 *  NullPointerException for the i-th child could not lay in
+	 *  the i-th slot.
+	 *  @see BTreeInternalPage#getChildId(int)
+	 */
+	private void pullDownParentEntry(BTreeInternalPage page, BTreeInternalPage sibling, BTreeEntry parentEntry,
+									 boolean isLeft) throws DbException{
+		// pull down parent entry
+		Field parentKey = parentEntry.getKey();
+		BTreeInternalPage leftPage = isLeft ? sibling : page;
+		BTreeInternalPage rightPage = isLeft ? page : sibling;
+		BTreePageId leftChildId = leftPage.reverseIterator().next().getRightChild();
+		BTreePageId rightChileId = rightPage.iterator().next().getLeftChild();
+		BTreeEntry pulledDownEntry = new BTreeEntry(parentKey, leftChildId, rightChileId);
+		page.insertEntry(pulledDownEntry);
 	}
 	
 	/**
