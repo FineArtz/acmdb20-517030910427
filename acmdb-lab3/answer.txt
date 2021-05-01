@@ -1,0 +1,12 @@
+The writeup is formulated in the same order as the exercises. I will not focus more on detailing implementation, but only infer some of clues for my design.
+
+Exercise 1: implement Predicate.java, JoinPredicate.java, Filter.java, Join.java and HashEquiJoin.java
+Implementation for Predicate.java, JoinPredicate.java and Filter.java is quite simple. An operator takes DbIterators as its base iterators to scan over tuples, and returns the tuples satisfying specific conditions, or resulted from specific algorithm.
+The simplest nested-loop join takes two iterators fow two operand tables. Without any optimization, the outer iterator scans the first table and the inner iterator scans the second table in the parametric order. When invoking fetchNext(), the inner iterator fetches the next tuple satisfying the predicate in the inner table, and merges with the current outer tuple via TupleDesc.merge(). If the inner iterator goes to the end, the outer iterator moves and the inner rewinds.
+For HashEquiJoin, a hash map is introduced to reduce the time of looping and comparing. The second table is preprocessed into a hash map, whose key is the hash code of the key field and value is a list containing tuples with the same key. Therefore, the inner loop in original join is converted to a search in the hash map, of which time complexity is reduced from O(n) to O(log n).
+
+Exercise 2: impelement IntegerAggregator.java, StringAggregator.java and Aggregate.java
+The code is simple. But note that dynamically computing the average aggregator in IntegerAggregator could cause decimal loss. Thus I use a map to count the occurrance and calculate the average at final only once. Moreover, proper use of the conditional operator (?: operator) makes the code more tiny.
+
+Exercise 3: implement the remaining part in HeapPage.java, HeapFile.java and insertTuple() and deleteTuple() in BufferPool.java
+For convenience, 

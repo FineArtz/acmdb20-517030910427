@@ -1,0 +1,14 @@
+The writeup is formulated in the same order as the exercises. I will not focus more on detailing implementation, but only infer some of clues for my design.
+
+Exercise 1: implement BufferPool.java
+I choose LFU as the eviction policy, maintaining a HitRate class for each page. In HitRate class, the hit count and the last hit time are recorded, so that the page with the smallest hit count, and with the farthest last hit time when more than one pages holding same hit count. Then before getting pages or after modifying tuples, the redundunt pages are evicted and the related  pages are put into the buffer pool.
+
+Exercise 2: implement findLeafPage() in BTreeFile.java
+Nothing special. Just follow the normal algorithm.
+
+Exercise 3: implement splitLeafPage() and splitInternalPage() in BTreeFile.java
+Spliting leaf page requires both modification on the parent and the sibling. When a new leaf page is created, it becomes the right sibling of the old leaf page. Note that in splitInternalPage, the middle entry is INSERTED into the parent,  but not COPIED, which is different from splitting the leaf page.
+
+Exercise 4: implement stealFromLeafPage(), stealFromLeftInternalPage() and stealFromRightInternalPage in BTreeFile.java
+Exercise 5: implement mergeLeafPages() and mergeInternalPages() in BTreeFile.java
+I take advantage of symmetry between stealFromLeftInternalPage and stealFromRightInternalPage, whose code are very similar. Both methods consist of three steps: pull down parent entry, move entries from the other, and update parent. Actions on leaf pages always need to update affected siblings, while those on internal pages do not since internal pages do not have siblings.

@@ -1,0 +1,19 @@
+The writeup is formulated in the same order as the exercises. I will not focus more on detailing implementation, but only infer some of clues for my design.
+
+Exercise 1: implement TupleDesc.java and Tuple.java
+Intuitively, a container of TDItem is needed. When further writing other functions, I find that the memory size taken by itself should also be recorded. From the beginning, I manage to write tidy and readable codes, and set up a complementary exception format. All codes in this excercise and upcoming labs will obey the same style. Moreover, I think that the hashcode of TupleDesc will be very important in the future, but I have not thought up a good way to implement it, leaving it blank.
+
+Exercise 2: implement Catalog.java
+A tableMap maps an id to corresponding table, and an idMap maps a name to corresponding id. This structure is more convenient than using a pair (name, id) as the combinition key or only using the name as the key. 
+
+Exercise 3: implement getPage() in BufferPool.java
+Only one function is implemented in this exercise. There are not many things to be notified.
+
+Exercise 4: implement HeapPageId.java, RecordId.java and HeapPage.java
+In two ID files, I choose the same hash code function as (Id << 5 | No), since no more than 32 IDs would be created in a single table or a single page. Calculation in HeapPage.java is a little tedious.
+
+Exercise 5: implement HeapFile.java
+This is the most complex excercise in Lab 1, but can be finished by following the skeleton and DbFileIterator interfaces. No much freedom for new design.
+
+Exercise 6: implement SeqScan.java
+Sequencial scan is also simple as it follows the DbIterator interface.
