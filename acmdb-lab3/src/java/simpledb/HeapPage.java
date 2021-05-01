@@ -20,7 +20,7 @@ public class HeapPage implements Page {
     final int numSlots;
 
     byte[] oldData;
-    private final Byte oldDataLock = new Byte((byte) 0);
+    private final Byte oldDataLock = (byte) 0;
 
     private TransactionId dirtTransactionId = null;
     private ArrayList<Tuple> tupleList = new ArrayList<>();

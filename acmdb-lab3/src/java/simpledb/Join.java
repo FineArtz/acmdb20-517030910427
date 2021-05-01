@@ -132,14 +132,7 @@ public class Join extends Operator {
                 tuple2 = child2.next();
                 if (predicate.filter(tuple1, tuple2)) {
                     Tuple tuple = new Tuple(TupleDesc.merge(tuple1.getTupleDesc(), tuple2.getTupleDesc()));
-                    int fieldNum1 = tuple1.getTupleDesc().numFields();
-                    int fieldNum2 = tuple2.getTupleDesc().numFields();
-                    for (int i = 0; i < fieldNum1; ++i) {
-                        tuple.setField(i, tuple1.getField(i));
-                    }
-                    for (int i = 0; i < fieldNum2; ++i) {
-                        tuple.setField(i + fieldNum1, tuple2.getField(i));
-                    }
+                    setJoinResult(tuple, tuple1, tuple2);
                     return tuple;
                 }
             }
@@ -166,6 +159,17 @@ public class Join extends Operator {
         }
         child1 = children[0];
         child2 = children[1];
+    }
+
+    static void setJoinResult(Tuple dest, Tuple tuple1, Tuple tuple2) {
+        int fieldNum1 = tuple1.getTupleDesc().numFields();
+        int fieldNum2 = tuple2.getTupleDesc().numFields();
+        for (int i = 0; i < fieldNum1; ++i) {
+            dest.setField(i, tuple1.getField(i));
+        }
+        for (int i = 0; i < fieldNum2; ++i) {
+            dest.setField(i + fieldNum1, tuple2.getField(i));
+        }
     }
 
 }

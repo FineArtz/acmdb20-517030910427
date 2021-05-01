@@ -216,7 +216,7 @@ public class TupleDesc implements Serializable {
 
     private int typeHashcode() {
         if (typeHashcode == -1) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             int len = ItemList.size();
             for (int i = 0; i < len - 1; ++i) {
                 sb.append(ItemList.get(i).fieldType.toString());
@@ -244,7 +244,7 @@ public class TupleDesc implements Serializable {
      */
     public String toString() {
         if (tostring == null) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             int len = ItemList.size();
             for (int i = 0; i < len - 1; ++i) {
                 sb.append(ItemList.get(i).toString());

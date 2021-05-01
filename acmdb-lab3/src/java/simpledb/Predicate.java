@@ -107,6 +107,6 @@ public class Predicate implements Serializable {
      * operand_string
      */
     public String toString() {
-        return new String(String.format("f = %d,\top = %s,\toperand = %s", field, op.toString(), operand.toString()));
+        return String.format("f = %d,\top = %s,\toperand = %s", field, op.toString(), operand.toString());
     }
 }

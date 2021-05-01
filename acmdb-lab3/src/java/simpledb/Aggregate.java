@@ -41,10 +41,12 @@ public class Aggregate extends Operator {
 	    this.gbField = gfield;
 	    this.what = aop;
 	    if (child.getTupleDesc().getFieldType(afield) == Type.INT_TYPE) {
-	        aggregator = new IntegerAggregator(gfield, gfield == -1 ? null : child.getTupleDesc().getFieldType(gfield), afield, aop);
+	        aggregator = new IntegerAggregator(gfield,
+                    gfield == -1 ? null : child.getTupleDesc().getFieldType(gfield), afield, aop);
         }
 	    else {
-	        aggregator = new StringAggregator(gfield, gfield == -1 ? null : child.getTupleDesc().getFieldType(gfield), afield, aop);
+	        aggregator = new StringAggregator(gfield,
+                    gfield == -1 ? null : child.getTupleDesc().getFieldType(gfield), afield, aop);
         }
 	    this.agIterator = null;
     }
@@ -137,9 +139,10 @@ public class Aggregate extends Operator {
                         new Type[] {Type.INT_TYPE} :
                         new Type[] {child.getTupleDesc().getFieldType(gbField), Type.INT_TYPE},
                 gbField == Aggregator.NO_GROUPING ?
-                        new String[] {String.format("%s (%s)", what.toString(), child.getTupleDesc().getFieldName(agField))} :
-                        new String[] {child.getTupleDesc().getFieldName(gbField),
-                                String.format("%s (%s)", what.toString(), child.getTupleDesc().getFieldName(agField))}
+                        new String[] {String.format(
+                                "%s (%s)", what.toString(), child.getTupleDesc().getFieldName(agField))} :
+                        new String[] {child.getTupleDesc().getFieldName(gbField), String.format(
+                                "%s (%s)", what.toString(), child.getTupleDesc().getFieldName(agField))}
         );
     }
 

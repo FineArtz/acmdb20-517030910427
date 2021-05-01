@@ -13,8 +13,6 @@ public class StringAggregator implements Aggregator {
 
     private int gbField;
     private Type gbFieldType;
-    private int agField;
-    private Op what;
     private Map<Field, Integer> groups = new HashMap<>();
 
     /**
@@ -32,8 +30,6 @@ public class StringAggregator implements Aggregator {
         }
         this.gbField = gbfield;
         this.gbFieldType = gbfieldtype;
-        this.agField = afield;
-        this.what = what;
     }
 
     /**
