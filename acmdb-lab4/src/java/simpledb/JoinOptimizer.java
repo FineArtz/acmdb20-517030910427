@@ -100,7 +100,7 @@ public class JoinOptimizer {
      * @return An estimate of the cost of this query, in terms of cost1 and
      *         cost2
      */
-    public double estimateJoinCost(LogicalJoinNode j, int card1, int card2,
+    double estimateJoinCost(LogicalJoinNode j, int card1, int card2,
             double cost1, double cost2) {
         if (j instanceof LogicalSubplanJoinNode) {
             // A LogicalSubplanJoinNode represents a subquery.
@@ -135,7 +135,7 @@ public class JoinOptimizer {
      *            The table stats, referenced by table names, not alias
      * @return The cardinality of the join
      */
-    public int estimateJoinCardinality(LogicalJoinNode j, int card1, int card2,
+    int estimateJoinCardinality(LogicalJoinNode j, int card1, int card2,
             boolean t1pkey, boolean t2pkey, Map<String, TableStats> stats) {
         if (j instanceof LogicalSubplanJoinNode) {
             // A LogicalSubplanJoinNode represents a subquery.
@@ -151,7 +151,7 @@ public class JoinOptimizer {
     /**
      * Estimate the join cardinality of two tables.
      * */
-    public static int estimateTableJoinCardinality(Predicate.Op joinOp,
+    static int estimateTableJoinCardinality(Predicate.Op joinOp,
             String table1Alias, String table2Alias, String field1PureName,
             String field2PureName, int card1, int card2, boolean t1pkey,
             boolean t2pkey, Map<String, TableStats> stats,
@@ -222,7 +222,7 @@ public class JoinOptimizer {
      *            The size of the subsets of interest
      * @return a set of all subsets of the specified size
      */
-    public <T> Set<Set<T>> enumerateSubsets(Vector<T> v, int size) {
+    private <T> Set<Set<T>> enumerateSubsets(Vector<T> v, int size) {
         Set<Set<T>> els = new HashSet<>();
         Set<List<Integer>> indicesSet = getSubsetIndex(v.size(), size);
         for (List<Integer> indices : indicesSet) {
@@ -241,15 +241,12 @@ public class JoinOptimizer {
             for (int i = 0; i < n; ++i) {
                 allSubsetIndices.add(new HashSet<>());
             }
-            for (int i = 0; i < (1 << n); ++i) {
+            for (int i = 1; i < (1 << n); ++i) {
                 List<Integer> indices = new ArrayList<>();
                 for (int j = 0; j < n; ++j) {
                     if ((i & (1 << j)) != 0) {
                         indices.add(j);
                     }
-                }
-                if (indices.isEmpty()) {
-                    continue;
                 }
                 allSubsetIndices.get(indices.size() - 1).add(indices);
             }

@@ -38,7 +38,7 @@ public class IntHistogram {
      * Add a value to the set of values that you are keeping a histogram of.
      * @param v Value to add to the histogram
      */
-    public void addValue(int v) {
+    void addValue(int v) {
     	++histogram[bucketId(v, false)];
     	++ntups;
     }
@@ -53,7 +53,7 @@ public class IntHistogram {
      * @param v Value
      * @return Predicted selectivity of this particular operator and value
      */
-    public double estimateSelectivity(Predicate.Op op, int v) {
+    double estimateSelectivity(Predicate.Op op, int v) {
         int id = bucketId(v, true);
         double ret = 0.0;
         double err = 0.0;
@@ -104,7 +104,7 @@ public class IntHistogram {
      *     join optimization. It may be needed if you want to
      *     implement a more efficient optimization
      * */
-    public double avgSelectivity()
+    double avgSelectivity()
     {
         double ret = 0.0;
         for (int i = 0; i < buckets; ++i) {

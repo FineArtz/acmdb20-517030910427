@@ -1,0 +1,14 @@
+The writeup is formulated in the same order as the exercises. I will not focus more on detailing implementation, but only infer some of clues for my design.
+
+Exercise 1: implement IntHistogram.java
+The core method of IntHistogram is estimateSelectivity(). I take the LESS_THAN_OR_EQ and LESS_THAN as two basic operators, by which other operators can be represented. For example, sel(f>const) = 1 - sel(f<=const), and sel(f=const) = sel(f<=const) - sel(f<const). Moreover, LESS_THAN_OR_EQ can be calculated by LESS_THAN adding a correlation term equal to the selectivity of f=const. The implementation is tedious and error-prone.
+
+Exercise 2: implement TableStats.java
+I design the construction procedure as two scans. The first scan only computes the minimum and the maximum of each tuple, and constructs corresponding histograms. The second scan populate histograms with values.
+
+Exercise 3: implement estimateJoinCost() and estimateJoinCardinality() in JoinOptimizer.java
+For ordinary join, the cost consists of scan(t1) + card(t1)*scan(t2) + card(t1)*card(t2). The first two terms are IO cost while the third term is the loop computing cost. For HashEquiJoin, only one scan is performed on either table, costing scan(t1) + scan(t2), and retrieving equal tuples from t2 is completed in a HashMap, which cost card(t1)*log(card(t2)). 
+
+Exercise 4: implement orderJoins() in JoinOptimizer.java
+In this exercise, I write a faster version of enumerateSubsets() as the **bonus exercise**, which depends on another helper method getSubsetIndex(). Noting that the join plan may query subsets with different sizes, getSubsetIndex() precomputes all indices of a subset of size s<n via bit operations. For details, I use two nested loop. The outer loop ranges from 1 to (1<<n)-1, enumerating all 2^n-1 non-empty subsets of the set. The inner loop ranges from 0 to n-1, enumerating indices of selected elements. The result is stored in a List<> so that it is only calculated once.
+

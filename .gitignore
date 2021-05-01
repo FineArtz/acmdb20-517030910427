@@ -88,7 +88,3 @@ dataset/
 # build
 dist/
 
-# text
-*.txt
-!answer.txt
-

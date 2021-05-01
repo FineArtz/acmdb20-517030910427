@@ -65,14 +65,13 @@ public class TableStats {
      * 100, though our tests assume that you have at least 100 bins in your
      * histograms.
      */
-    static final int NUM_HIST_BINS = 160;
+    private static final int NUM_HIST_BINS = 160;
 
-    private int tableid;
     private int ioCostPerPage;
     private HashMap<Integer, IntHistogram> intHistMap = new HashMap<>();
     private HashMap<Integer, StringHistogram> strHistMap = new HashMap<>();
     private DbFile file;
-    private int numTuples = 0;
+    private int numTuples;
 
     /**
      * Create a new TableStats object, that keeps track of statistics on each
@@ -85,7 +84,6 @@ public class TableStats {
      *            sequential-scan IO and disk seeks.
      */
     public TableStats(int tableid, int ioCostPerPage) {
-        this.tableid = tableid;
         this.ioCostPerPage = ioCostPerPage;
         this.file = Database.getCatalog().getDatabaseFile(tableid);
         TupleDesc tupleDesc = file.getTupleDesc();
@@ -168,7 +166,7 @@ public class TableStats {
      * 
      * @return The estimated cost of scanning the table.
      */
-    public double estimateScanCost() {
+    double estimateScanCost() {
         return ioCostPerPage * ((HeapFile) file).numPages();
     }
 
@@ -181,7 +179,7 @@ public class TableStats {
      * @return The estimated cardinality of the scan with the specified
      *         selectivityFactor
      */
-    public int estimateTableCardinality(double selectivityFactor) {
+    int estimateTableCardinality(double selectivityFactor) {
         return (int) (numTuples * selectivityFactor);
     }
 
@@ -195,7 +193,7 @@ public class TableStats {
      * tuple, of which we do not know the value of the field, return the
      * expected selectivity. You may estimate this value from the histograms.
      * */
-    public double avgSelectivity(int field, Predicate.Op op) {
+    double avgSelectivity(int field, Predicate.Op op) {
         return 1.0;
     }
 
@@ -212,8 +210,8 @@ public class TableStats {
      * @return The estimated selectivity (fraction of tuples that satisfy) the
      *         predicate
      */
-    public double estimateSelectivity(int field, Predicate.Op op, Field constant) {
-        double ret = 0.0;
+    double estimateSelectivity(int field, Predicate.Op op, Field constant) {
+        double ret;
         if (intHistMap.containsKey(field)) {
             ret = intHistMap.get(field).estimateSelectivity(op, ((IntField) constant).getValue());
         }
