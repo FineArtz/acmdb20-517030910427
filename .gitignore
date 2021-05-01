@@ -41,8 +41,8 @@ buildNumber.properties
 
 # About IntelliJ
 *.iml
-/.idea/
-/out/
+.idea/
+out/
 
 # BlueJ files
 *.ctxt
@@ -91,3 +91,4 @@ dist/
 # text
 *.txt
 !answer.txt
+

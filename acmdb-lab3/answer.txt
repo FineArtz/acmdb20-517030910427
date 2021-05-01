@@ -1,3 +1,7 @@
+I am sorry for mistaking the .gitignore file so that the answer.txt files in acmdb-lab1 and acmdb-lab2 were not uploaded to GitHub correctly. Now they are pushed up and you can check them in previous directories.
+
+---
+
 The writeup is formulated in the same order as the exercises. I will not focus more on detailing implementation, but only infer some of clues for my design.
 
 Exercise 1: implement Predicate.java, JoinPredicate.java, Filter.java, Join.java and HashEquiJoin.java
@@ -9,4 +13,9 @@ Exercise 2: impelement IntegerAggregator.java, StringAggregator.java and Aggrega
 The code is simple. But note that dynamically computing the average aggregator in IntegerAggregator could cause decimal loss. Thus I use a map to count the occurrance and calculate the average at final only once. Moreover, proper use of the conditional operator (?: operator) makes the code more tiny.
 
 Exercise 3: implement the remaining part in HeapPage.java, HeapFile.java and insertTuple() and deleteTuple() in BufferPool.java
-For convenience, 
+For convenience, I implement TupleDesc.hashCode() in this exercise, by directly using the hash code of its string form. Having found that checking whether two tuple descriptions are equal comsumes too much time, I implement another hash function called typeHashcode(), which only converts types of fields in a tuple description to string and retrieves its hash code. Both of two hash codes are cached in the object itself so that no duplicated computation is required. For now, equals() operator just checks the equality of operands' hash codes.
+When deleting tuple, no tuple is actually deleted but its slot is marked as unused instead. Tuple insertion scans for the first unused slot and overwrite the new tuple into it.
+
+Exercise 4: implement Insert.java and Delete.java
+This exercise is then quite basic after insertTuple() and deleteTuple() implemented.
+

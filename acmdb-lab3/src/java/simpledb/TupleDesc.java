@@ -201,16 +201,6 @@ public class TupleDesc implements Serializable {
             return false;
         }
         TupleDesc td = (TupleDesc) o;
-        /*if (ItemList.size() != td.numFields()) {
-            return false;
-        }
-        int len = ItemList.size();
-        for (int i = 0; i < len; ++i) {
-            if (!ItemList.get(i).fieldType.equals(td.getFieldType(i))) {
-                return false;
-            }
-        }
-        return true;*/
         return typeHashcode() == td.typeHashcode();
     }
 
