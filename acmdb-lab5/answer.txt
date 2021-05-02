@@ -1,0 +1,34 @@
+The writeup is formulated in the same order as the exercises. I will not focus more on detailing implementation, but only infer some of clues for my design.
+
+Exercise 1: modify getPage(), implement releasePage() and holdsLock() in BufferPool.java
+Before any modification, a lock and a lock manager class are necessary. I spent a lot of time to change my design, because it always generated unsolvable bugs. First, I expose all functions of LockManager out instead of defining a class to wrap them. But I find that only one synchronized method can be excuted at the same time. That is, if a class has two synchronized method A and B, when thread 1 calls A, other threads can even not call B until A in thread 1 finishs. After looking up in documents, I manage to understand the reason why this happens: all synchronized methods of a class share the same object lock. Therefore, I finally define a LockManager class to wrap synchronized methods related with locks, avoiding interference of other methods in BufferPool class.
+
+Exercise 2: correctly acquire and release locks
+Design for acquiring locks is easy but the implementation is quite annoying. I implement the lock at page level, as the guidance recommended. When a transaction acquires a lock, the control flow is as following:
+    Acquire Lock:
+        already other locks?    ---No--- accept
+        |
+        | Yes
+        |
+        acquires a shared lock? ---No------------------------------ exclusive lock exists? ---Yes--- accept if is from the same transaction, refuse otherwise
+        |                                                           |
+        | Yes                                                       | No
+        |                                                           |
+        exclusive lock exists?  ---No--- accept                     only one shared lock? ---Yes--- accept if is from the same transaction, refuse otherwise
+        |                                                           |
+        | Yes                                                       | No
+        |                                                           |
+        accept if is from the same transaction, refuse otherwise    refuse
+Another annoying thing is that how to store the locks on a page. I used Vector at first, which is a synchronized collection implementing List interface, while ArrayList is not synchronized. Though Vector performs a little worse than CopyOnWriteArrayList since it grants locks even on reading, its advantage of less memory makes it a better choice. However, when modifying the element in a Vector during an iteration, Vector would rise ConcurrentModificationException. Theoretically, carefully setting all iteration as synchronized could solve this problem, but I even failed to locate where the problem occurred due to extreme difficulty in multi-thread debugging! Finally, I come up with a simple but safe container, a Set initialized by ConcurrentHashMap.
+
+Exercise 3: modify evictPage() in BufferPool.java
+I modify the compareTo() method in HitRate, so that the dirty page is always at the least priority. If all pages are dirty, a DbException is thrown.
+
+Exercise 4: implement transactionComplete() in BufferPool.java
+Committing pages need not to be synchronized, whereas aborting need since pages that have been written are put back to the buffer pool. The quick finding of locked pages and locks on the page relies on the bidirectional indices "tid->pages on lock" and "pid -> locks on page" in LockManager, based on ConcurrentHashMap. All locks will be released at the end of transactionComplete(), regardless of commitment.
+
+Exercise 5: implement deadlock detection and resolution in BufferPool.java
+To detect deadlocks, I implement the LockDependencyGraph, which builds a graph for the dependency between transactions. Each time a transaction requires a lock on the page, new edges between this transaction and all transactions that hold locks on the required page are added. Then the detection for deadlocks simply performs a breadth-first-search to judge whether the graph contains a cycle.
+
+Up to now, the database is complete, and all tests are passed.
+

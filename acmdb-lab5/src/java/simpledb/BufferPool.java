@@ -1,12 +1,9 @@
 package simpledb;
 
-import javafx.util.Pair;
-
 import java.io.*;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * BufferPool manages the reading and writing of pages into memory from
@@ -35,7 +32,7 @@ public class BufferPool {
         private int hitCount;
         private long hitTime;
 
-        public HitRate(PageId pageId, int hitCount, long hitTime) {
+        HitRate(PageId pageId, int hitCount, long hitTime) {
             this.pageId = pageId;
             this.hitCount = hitCount;
             this.hitTime = hitTime;
@@ -65,9 +62,6 @@ public class BufferPool {
 
     public enum LockType implements Serializable {
         SHARED, EXCLUSIVE;
-        public static LockType getLock(int i) {
-            return values()[i];
-        }
     }
 
     private class Lock implements Comparable<Lock> {
@@ -110,13 +104,12 @@ public class BufferPool {
          * Vector is a synchronised collection implementing List interface
          * , while ArrayList is not synchronised.
          * Though Vector performs a little worse than CopyOnWriteArrayList
-         * since it grants locks even on reading, its advantages of less
+         * since it grants locks even on reading, its advantage of less
          * memory makes it a better choice.
          * Be careful! Vector may rise ConcurrentModificationException when
          * iterating. A lock to synchronise iterating is necessary.
          * </del>
-         */
-        /**
+         *
          * It is found that Vector is over-dated and collapsed. If a lock is
          * necessary for all implementations, why not directly use Set?
          */
