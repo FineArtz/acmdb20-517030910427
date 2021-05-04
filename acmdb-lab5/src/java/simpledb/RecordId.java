@@ -3,24 +3,20 @@ package simpledb;
 import java.io.Serializable;
 
 /**
- * A RecordId is a reference to a specific tuple on a specific page of a
- * specific table.
+ * A RecordId is a reference to a specific tuple on a specific page of a specific table.
  */
 public class RecordId implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private PageId pageId;
-    private int tupleNumber;
+    private final PageId pageId;
+    private final int tupleNumber;
 
     /**
-     * Creates a new RecordId referring to the specified PageId and tuple
-     * number.
-     * 
-     * @param pid
-     *            the pageid of the page on which the tuple resides
-     * @param tupleno
-     *            the tuple number within the page.
+     * Creates a new RecordId referring to the specified PageId and tuple number.
+     *
+     * @param pid the pageid of the page on which the tuple resides
+     * @param tupleno the tuple number within the page.
      */
     public RecordId(PageId pid, int tupleno) {
         this.pageId = pid;
@@ -30,7 +26,7 @@ public class RecordId implements Serializable {
     /**
      * @return the tuple number this RecordId references.
      */
-    public int tupleno() {
+    int tupleno() {
         return tupleNumber;
     }
 
@@ -42,9 +38,8 @@ public class RecordId implements Serializable {
     }
 
     /**
-     * Two RecordId objects are considered equal if they represent the same
-     * tuple.
-     * 
+     * Two RecordId objects are considered equal if they represent the same tuple.
+     *
      * @return True if this and o represent the same tuple
      */
     @Override
@@ -53,18 +48,13 @@ public class RecordId implements Serializable {
             return false;
         }
         RecordId rid = (RecordId) o;
-        if (rid.pageId.equals(pageId) && rid.tupleNumber == tupleNumber) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return rid.pageId.equals(pageId) && rid.tupleNumber == tupleNumber;
     }
 
     /**
-     * You should implement the hashCode() so that two equal RecordId instances
-     * (with respect to equals()) have the same hashCode().
-     * 
+     * You should implement the hashCode() so that two equal RecordId instances (with respect to equals()) have the same
+     * hashCode().
+     *
      * @return An int that is the same for equal RecordId objects.
      */
     @Override

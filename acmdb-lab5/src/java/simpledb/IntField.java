@@ -1,19 +1,16 @@
 package simpledb;
 
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 /**
  * Instance of Field that stores a single integer.
  */
 public class IntField implements Field {
-    
-	private static final long serialVersionUID = 1L;
-	
-	private final int value;
 
-    public int getValue() {
-        return value;
-    }
+    private static final long serialVersionUID = 1L;
+
+    private final int value;
 
     /**
      * Constructor.
@@ -24,6 +21,10 @@ public class IntField implements Field {
         value = i;
     }
 
+    public int getValue() {
+        return value;
+    }
+
     public String toString() {
         return Integer.toString(value);
     }
@@ -32,45 +33,44 @@ public class IntField implements Field {
         return value;
     }
 
+    @SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
     public boolean equals(Object field) {
         return ((IntField) field).value == value;
     }
 
-    public void serialize(DataOutputStream dos) throws IOException {
+    public void serialize(DataOutputStream dos)
+    throws IOException {
         dos.writeInt(value);
     }
 
     /**
-     * Compare the specified field to the value of this Field.
-     * Return semantics are as specified by Field.compare
+     * Compare the specified field to the value of this Field. Return semantics are as specified by Field.compare
      *
-     * @throws IllegalCastException if val is not an IntField
      * @see Field#compare
      */
     public boolean compare(Predicate.Op op, Field val) {
-
         IntField iVal = (IntField) val;
 
         switch (op) {
-        case EQUALS:
-            return value == iVal.value;
-        case NOT_EQUALS:
-            return value != iVal.value;
+            case EQUALS:
+                return value == iVal.value;
+            case NOT_EQUALS:
+                return value != iVal.value;
 
-        case GREATER_THAN:
-            return value > iVal.value;
+            case GREATER_THAN:
+                return value > iVal.value;
 
-        case GREATER_THAN_OR_EQ:
-            return value >= iVal.value;
+            case GREATER_THAN_OR_EQ:
+                return value >= iVal.value;
 
-        case LESS_THAN:
-            return value < iVal.value;
+            case LESS_THAN:
+                return value < iVal.value;
 
-        case LESS_THAN_OR_EQ:
-            return value <= iVal.value;
+            case LESS_THAN_OR_EQ:
+                return value <= iVal.value;
 
-    case LIKE:
-        return value == iVal.value;
+            case LIKE:
+                return value == iVal.value;
         }
 
         return false;
@@ -78,9 +78,11 @@ public class IntField implements Field {
 
     /**
      * Return the Type of this field.
+     *
      * @return Type.INT_TYPE
      */
-	public Type getType() {
-		return Type.INT_TYPE;
-	}
+    public Type getType() {
+        return Type.INT_TYPE;
+    }
+
 }

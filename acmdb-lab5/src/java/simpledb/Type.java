@@ -1,12 +1,13 @@
 package simpledb;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.Serializable;
 import java.text.ParseException;
-import java.io.*;
 
 /**
- * Class representing a type in SimpleDB.
- * Types are static objects defined by this class; hence, the Type
- * constructor is private.
+ * Class representing a type in SimpleDB. Types are static objects defined by this class; hence, the Type constructor is
+ * private.
  */
 public enum Type implements Serializable {
     INT_TYPE() {
@@ -16,48 +17,55 @@ public enum Type implements Serializable {
         }
 
         @Override
-        public Field parse(DataInputStream dis) throws ParseException {
+        public Field parse(DataInputStream dis)
+        throws ParseException {
             try {
                 return new IntField(dis.readInt());
-            }  catch (IOException e) {
+            }
+            catch (IOException e) {
                 throw new ParseException("couldn't parse", 0);
             }
         }
 
-    }, STRING_TYPE() {
+    },
+    STRING_TYPE() {
         @Override
         public int getLen() {
-            return STRING_LEN+4;
+            return STRING_LEN + 4;
         }
 
         @Override
-        public Field parse(DataInputStream dis) throws ParseException {
+        @SuppressWarnings("ResultOfMethodCallIgnored")
+        public Field parse(DataInputStream dis)
+        throws ParseException {
             try {
                 int strLen = dis.readInt();
-                byte bs[] = new byte[strLen];
+                byte[] bs = new byte[strLen];
                 dis.read(bs);
-                dis.skipBytes(STRING_LEN-strLen);
+                dis.skipBytes(STRING_LEN - strLen);
                 return new StringField(new String(bs), STRING_LEN);
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 throw new ParseException("couldn't parse", 0);
             }
         }
     };
-    
+
     public static final int STRING_LEN = 128;
 
-  /**
-   * @return the number of bytes required to store a field of this type.
-   */
+    /**
+     * @return the number of bytes required to store a field of this type.
+     */
     public abstract int getLen();
 
-  /**
-   * @return a Field object of the same type as this object that has contents
-   *   read from the specified DataInputStream.
-   * @param dis The input stream to read from
-   * @throws ParseException if the data read from the input stream is not
-   *   of the appropriate type.
-   */
-    public abstract Field parse(DataInputStream dis) throws ParseException;
+    /**
+     * @param dis The input stream to read from
+     * @return a Field object of the same type as this object that has contents read from the specified
+     *         DataInputStream.
+     *
+     * @throws ParseException if the data read from the input stream is not of the appropriate type.
+     */
+    public abstract Field parse(DataInputStream dis)
+    throws ParseException;
 
 }

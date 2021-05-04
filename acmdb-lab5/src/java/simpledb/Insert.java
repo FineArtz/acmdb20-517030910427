@@ -3,8 +3,7 @@ package simpledb;
 import java.io.IOException;
 
 /**
- * Inserts tuples read from the child operator into the tableId specified in the
- * constructor
+ * Inserts tuples read from the child operator into the tableId specified in the constructor
  */
 public class Insert extends Operator {
 
@@ -19,18 +18,13 @@ public class Insert extends Operator {
     /**
      * Constructor.
      *
-     * @param t
-     *            The transaction running the insert.
-     * @param child
-     *            The child operator from which to read tuples to be inserted.
-     * @param tableId
-     *            The table in which to insert tuples.
-     * @throws DbException
-     *             if TupleDesc of child differs from table into which we are to
-     *             insert.
+     * @param t The transaction running the insert.
+     * @param child The child operator from which to read tuples to be inserted.
+     * @param tableId The table in which to insert tuples.
+     * @throws DbException if TupleDesc of child differs from table into which we are to insert.
      */
     public Insert(TransactionId t, DbIterator child, int tableId)
-            throws DbException {
+    throws DbException {
         this.tupleDesc = child.getTupleDesc();
         if (!tupleDesc.equals(Database.getCatalog().getTupleDesc(tableId))) {
             throw new DbException(String.format(
@@ -48,7 +42,8 @@ public class Insert extends Operator {
         return tupleDesc;
     }
 
-    public void open() throws DbException, TransactionAbortedException {
+    public void open()
+    throws DbException, TransactionAbortedException {
         child.open();
         super.open();
     }
@@ -58,24 +53,24 @@ public class Insert extends Operator {
         super.close();
     }
 
-    public void rewind() throws DbException, TransactionAbortedException {
+    public void rewind()
+    throws DbException, TransactionAbortedException {
         child.rewind();
     }
 
     /**
-     * Inserts tuples read from child into the tableId specified by the
-     * constructor. It returns a one field tuple containing the number of
-     * inserted records. Inserts should be passed through BufferPool. An
-     * instances of BufferPool is available via Database.getBufferPool(). Note
-     * that insert DOES NOT need check to see if a particular tuple is a
-     * duplicate before inserting it.
+     * Inserts tuples read from child into the tableId specified by the constructor. It returns a one field tuple
+     * containing the number of inserted records. Inserts should be passed through BufferPool. An instances of
+     * BufferPool is available via Database.getBufferPool(). Note that insert DOES NOT need check to see if a particular
+     * tuple is a duplicate before inserting it.
      *
-     * @return A 1-field tuple containing the number of inserted records, or
-     *         null if called more than once.
+     * @return A 1-field tuple containing the number of inserted records, or null if called more than once.
+     *
      * @see Database#getBufferPool
      * @see BufferPool#insertTuple
      */
-    protected Tuple fetchNext() throws TransactionAbortedException, DbException {
+    protected Tuple fetchNext()
+    throws TransactionAbortedException, DbException {
         if (this.hasBeenCalled) {
             return null;
         }
@@ -85,7 +80,8 @@ public class Insert extends Operator {
             try {
                 Database.getBufferPool().insertTuple(tid, tableId, tuple);
                 ++cnt;
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 throw new DbException(String.format(
                         "IO Exception occurred when inserting tuple %d.", tuple.getRecordId().hashCode()));
             }

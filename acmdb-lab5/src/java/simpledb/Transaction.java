@@ -1,26 +1,28 @@
 package simpledb;
 
-import java.io.*;
+import java.io.IOException;
 
 /**
- * Transaction encapsulates information about the state of
- * a transaction and manages transaction commit / abort.
+ * Transaction encapsulates information about the state of a transaction and manages transaction commit / abort.
  */
 
 public class Transaction {
     private final TransactionId tid;
-    volatile boolean started = false;
+    private volatile boolean started = false;
 
     public Transaction() {
         tid = new TransactionId();
     }
 
-    /** Start the transaction running */
+    /**
+     * Start the transaction running
+     */
     public void start() {
         started = true;
         try {
             Database.getLogFile().logXactionBegin(tid);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -29,24 +31,35 @@ public class Transaction {
         return tid;
     }
 
-    /** Finish the transaction */
-    public void commit() throws IOException {
+    /**
+     * Finish the transaction
+     */
+    public void commit()
+    throws IOException {
         transactionComplete(false);
     }
 
-    /** Finish the transaction */
-    public void abort() throws IOException {
+    /**
+     * Finish the transaction
+     */
+    @SuppressWarnings("WeakerAccess")
+    public void abort()
+    throws IOException {
         transactionComplete(true);
     }
 
-    /** Handle the details of transaction commit / abort */
-    public void transactionComplete(boolean abort) throws IOException {
+    /**
+     * Handle the details of transaction commit / abort
+     */
+    public void transactionComplete(boolean abort)
+    throws IOException {
 
         if (started) {
             //write commit / abort records
             if (abort) {
                 Database.getLogFile().logAbort(tid); //does rollback too
-            } else {
+            }
+            else {
                 //write all the dirty pages for this transaction out
                 Database.getBufferPool().flushPages(tid);
                 Database.getLogFile().logCommit(tid);
@@ -54,7 +67,8 @@ public class Transaction {
 
             try {
                 Database.getBufferPool().transactionComplete(tid, !abort); // release locks
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 e.printStackTrace();
             }
 
@@ -62,4 +76,5 @@ public class Transaction {
             started = false;
         }
     }
+
 }
